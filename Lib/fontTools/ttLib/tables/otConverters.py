@@ -161,6 +161,8 @@ class BaseConverter(object):
 			"AxisCount",
 			"BaseGlyphRecordCount",
 			"LayerRecordCount",
+			"MergeClassCount",
+			"ClassDefCount",
 		]
 		self.description = description
 
@@ -706,6 +708,21 @@ class ExtSubTable(LTable, SubTable):
 		writer.Extension = True # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
 
+class OffsetList(Table):
+	"""needed for the MERG table. A list of offsets to ClassDef entries"""
+	def read(self, reader, font, tableDict):
+		offset = self.readOffset(reader)
+		if offset == 0:
+			return None
+		table = self.tableClass()
+		subReader = reader.copy()
+		subReader.pos = offset
+		if font.lazy:
+			table.reader = subReader
+			table.font = font
+		else:
+			table.decompile(subReader, font)
+		return table
 
 class FeatureParams(Table):
 	def getConverter(self, featureTag):
@@ -1782,6 +1799,7 @@ converterMapping = {
 	"BiasedAngle":	BiasedAngle,
 	"struct":	Struct,
 	"Offset":	Table,
+	"OffsetList":	OffsetList,
 	"LOffset":	LTable,
 	"Offset24":	Table24,
 	"ValueRecord":	ValueRecord,

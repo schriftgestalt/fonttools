@@ -1551,6 +1551,34 @@ otData = [
 	]),
 
 	#
+	# MERG
+	#
+	
+	('MERG', [
+		('uint16', 'Version', None, None, 'Version number of the merge table — set to 0.'),
+		('uint16', 'MergeClassCount', None, None, 'The number of merge classes.'),
+		('Offset', 'MergeData', None, None, 'Offset to the array of merge-entry data.'),
+		('uint16', 'ClassDefCount', None, None, 'The number of class definition tables.'),
+		('Offset', 'MergeClassDefs', None, None, 'Offset to an array of offsets to class definition tables — in bytes from the start of the MERG table.'),
+	]),
+	
+	('MergeData', [
+		('MergeEntryRow', 'MergeEntryRow', 'MergeClassCount', 0, 'Array of merge-entry rows.'),
+	]),
+	
+	('MergeEntryRow', [
+		('uint8', 'MergeEntries', 'MergeClassCount', 0, 'Array of merge entries.'),
+	]),
+	
+	('MergeClassDefs', [
+		('OffsetList', 'MergeClasses', 'ClassDefCount', 0, ''),
+	]),
+	
+	('MergeClasses', [
+		('ClassDef', 'MergeClass', None, None, 'Array of merge entries.'),
+	]),
+	
+	#
 	# COLR
 	#
 
