@@ -645,6 +645,20 @@ class BuilderTest(unittest.TestCase):
             {("latn", language): "test" for language in languages},
         )
 
+    def test_language_multiple_dflt_must_be_alone(self):
+        builder = Builder(makeTTFont(), (None, None))
+        builder.start_feature(location=None, name="test")
+        builder.set_script(location=None, script="latn")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "'dflt' can only be used alone in a language statement",
+            builder.set_language,
+            location=None,
+            language=["dflt", "DEU "],
+            include_default=True,
+            required=False,
+        )
+
     def test_language_multiple_build(self):
         font = self.build(
             "feature locl {"
@@ -692,6 +706,107 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(
             multiple_languages["GSUB"].compile(multiple_languages),
             separate_languages["GSUB"].compile(separate_languages),
+        )
+
+    def test_language_multiple_include_defaults(self):
+        multiple_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language dflt;
+                    lookup defaults {
+                        substitute a by b;
+                    } defaults;
+                    language DEU FRA include_dflt;
+                    lookup localized {
+                        substitute c by d;
+                    } localized;
+                } locl;
+                """))
+        separate_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language dflt;
+                    lookup defaults {
+                        substitute a by b;
+                    } defaults;
+                    language DEU include_dflt;
+                    lookup localized {
+                        substitute c by d;
+                    } localized;
+                    language FRA include_dflt;
+                    lookup localized;
+                } locl;
+                """))
+
+        self.assertEqual(
+            multiple_languages["GSUB"].compile(multiple_languages),
+            separate_languages["GSUB"].compile(separate_languages),
+        )
+
+    def test_language_multiple_does_not_leak_after_state_changes(self):
+        multiple_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language DEU FRA exclude_dflt;
+                    lookup western {
+                        substitute a by b;
+                    } western;
+                    language TRK exclude_dflt;
+                    lookup turkish {
+                        substitute c by d;
+                    } turkish;
+                    script cyrl;
+                    language SRB exclude_dflt;
+                    lookup serbian {
+                        substitute e by f;
+                    } serbian;
+                } locl;
+                """))
+        separate_languages = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language DEU exclude_dflt;
+                    lookup western {
+                        substitute a by b;
+                    } western;
+                    language FRA exclude_dflt;
+                    lookup western;
+                    language TRK exclude_dflt;
+                    lookup turkish {
+                        substitute c by d;
+                    } turkish;
+                    script cyrl;
+                    language SRB exclude_dflt;
+                    lookup serbian {
+                        substitute e by f;
+                    } serbian;
+                } locl;
+                """))
+
+        self.assertEqual(
+            multiple_languages["GSUB"].compile(multiple_languages),
+            separate_languages["GSUB"].compile(separate_languages),
+        )
+
+    def test_language_multiple_deduplicates_repeated_tags(self):
+        duplicates = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language DEU DEU FRA DEU exclude_dflt;
+                    substitute a by b;
+                } locl;
+                """))
+        deduplicated = self.build(dedent("""
+                feature locl {
+                    script latn;
+                    language DEU FRA exclude_dflt;
+                    substitute a by b;
+                } locl;
+                """))
+
+        self.assertEqual(
+            duplicates["GSUB"].compile(duplicates),
+            deduplicated["GSUB"].compile(deduplicated),
         )
 
     def test_language_in_aalt_feature(self):

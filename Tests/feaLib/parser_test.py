@@ -657,6 +657,14 @@ class ParserTest(unittest.TestCase):
             "language AZE CRT KAZ TAT TRK exclude_dflt required;",
         )
 
+    def test_language_multiple_dflt_must_be_alone(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "'dflt' can only be used alone in a language statement",
+            self.parse,
+            "feature test {language dflt DEU;} test;",
+        )
+
     def test_language_exclude_dflt(self):
         doc = self.parse("feature test {language DEU exclude_dflt;} test;")
         s = doc.statements[0].statements[0]

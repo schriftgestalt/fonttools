@@ -943,8 +943,9 @@ class LanguageStatement(Statement):
     """A ``language`` statement within a feature.
 
     ``language`` may be either a single four-character language tag or an
-    iterable of tags. The latter represents the multiple-languages syntax,
-    e.g. ``language AZE CRT KAZ TAT TRK;``.
+    iterable of tags. The latter represents a Glyphs.app extension proposed at
+    https://github.com/adobe-type-tools/feature_file_workshops/pull/8, e.g.
+    ``language AZE CRT KAZ TAT TRK;``.
     """
 
     def __init__(self, language, include_default=True, required=False, location=None):

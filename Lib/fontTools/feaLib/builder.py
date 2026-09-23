@@ -1157,6 +1157,10 @@ class Builder(object):
         else:
             languages = list(language)
         assert languages and all(len(language) == 4 for language in languages)
+        if len(languages) > 1 and "dflt" in languages:
+            raise FeatureLibError(
+                "'dflt' can only be used alone in a language statement", location
+            )
         # Repeated tags in a single statement do not designate distinct
         # language systems.
         languages = list(dict.fromkeys(languages))
